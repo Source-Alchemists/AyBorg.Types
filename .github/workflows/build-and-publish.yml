@@ -1,0 +1,53 @@
+name: Build and publish
+
+on: workflow_dispatch
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+    - name: NuGet Install
+      uses: NuGet/setup-nuget@v1
+
+    - name: NuGet Setup Cache
+      uses: actions/cache@v3
+      id: nuget-cache
+      with:
+        path: ~/.nuget
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets') }}
+        restore-keys: ${{ runner.os }}-nuget-
+
+    - if: contains(github.ref, 'main')
+      name: DotNet Pack
+      shell: pwsh
+      run: dotnet pack -c release
+
+    - if: contains(github.ref, 'feature/')
+      name: DotNet Pack
+      shell: pwsh
+      run: dotnet pack -c release --version-suffix "preview.${{ github.sha }}"
+
+    - name: Nuget.org Publish Packages
+      shell: pwsh
+      env:
+        SECRET_KEY: ${{ secrets.IMAGETORQUE_NUGET_ORG }}
+      run: dotnet nuget push src/artifacts/*.nupkg --api-key $env:SECRET_KEY --source https://api.nuget.org/v3/index.json  --skip-duplicate
+
