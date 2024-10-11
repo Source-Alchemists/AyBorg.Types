@@ -1,3 +1,4 @@
+using AyBorg.Types.Models;
 using AyBorg.Types.Ports;
 
 namespace AyBorg.Types.Result;
@@ -15,7 +16,7 @@ public record PortResult
     /// <summary>
     /// Gets the port.
     /// </summary>
-    public Port Port { get; } = new Port();
+    public PortModel Port { get; } = new PortModel();
 
     /// <summary>
     /// Gets the scale factor.
@@ -27,7 +28,7 @@ public record PortResult
     /// </summary>
     /// <param name="id">The id.</param>
     /// <param name="port">The port.</param>
-    public PortResult(string id, Port port)
+    public PortResult(string id, PortModel port)
     {
         Id = id;
         Port = port;
